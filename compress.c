@@ -1,10 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <zstd.h>
+#include <locale.h>
 
 int main() {
-    FILE* f = fopen("input.txt", "rb");
-
+       setlocale(LC_ALL, ""); // Enable UTF-8 support for pretty printing
+    FILE* f = fopen("hamlet.txt", "rb");
+    if (!f) {
+        perror("Failed to open input file");
+        return 1;
+    }
     fseek(f, 0, SEEK_END);
     size_t input_size = ftell(f);
     rewind(f);
@@ -30,15 +35,32 @@ int main() {
         return 1;
     }
 
-    FILE* out = fopen("output.zst", "wb");
+    FILE* out = fopen("hamlet.zst", "wb");
     fwrite(compressed, 1, compressed_size, out);
     fclose(out);
 
     free(input);
     free(compressed);
+double ratio = input_size ? 
+    (double)compressed_size / (double)input_size : 0.0; // Avoid division by zero
 
-    printf("Compressed %zu bytes -> %zu bytes\n",
-           input_size, compressed_size);
+    double savings = (1.0 - ratio) * 100.0;
 
+    // printf("Compressed %zu bytes -> %zu bytes\n",
+    //        input_size, compressed_size);
+printf("\n");
+printf("+---------------------------+--------------------------+\n");
+printf("| ZSTD COMPRESSION REPORT   |                          |\n");
+printf("+---------------------------+--------------------------+\n");
+printf("| File                      | %-24s |\n", "output.zst");
+printf("| Original Size             | %10zu bytes        |\n", input_size);
+printf("| Compressed Size           | %10zu bytes        |\n", compressed_size);
+printf("| Compression Ratio         | %10.3f              |\n", ratio);
+printf("| Space Saved               | %9.2f %%             |\n", savings);
+printf("+---------------------------+--------------------------+\n");
+
+if (compressed_size >= input_size) {
+    printf("Note: File is too small to benefit from compression.\n");
+}
     return 0;
 }
