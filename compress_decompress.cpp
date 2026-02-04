@@ -5,6 +5,8 @@
 #include <cstring>
 #include <zstd.h>
 
+using namespace std;
+
 int main() {
     const char* input_file = "hamlet.txt";
 
